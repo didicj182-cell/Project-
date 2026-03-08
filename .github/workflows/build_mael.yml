@@ -1,4 +1,4 @@
-name: Build MaelSpeed V3 APK
+name: Build MaelSpeed V3 APK (Auto-Fix)
 on: [push, workflow_dispatch]
 
 jobs:
@@ -19,13 +19,19 @@ jobs:
 
       - name: Auto-Fix Buildozer Spec
         run: |
-          # Menghapus baris requirements yang ganda dan menggantinya dengan yang sakti
-          sed -i '/^requirements =/d' buildozer.spec
+          # 1. Hapus SEMUA baris requirements yang ada di seluruh file (biar gak duplikat lagi)
+          sed -i '/requirements =/d' buildozer.spec
+          
+          # 2. Pasang satu baris requirements yang bener tepat di bawah tag [app]
           sed -i '/\[app\]/a requirements = python3,kivy==2.2.1,cython==0.29.33,yt-dlp,requests,sqlite3' buildozer.spec
-          # Memastikan log_level diset ke 2 biar kalau error kelihatan
-          sed -i 's/^log_level =.*/log_level = 2/' buildozer.spec
-          # Set API ke 33 yang lebih stabil untuk NDK 25b
+          
+          # 3. Setel ulang API dan Log Level biar stabil
           sed -i 's/^android.api =.*/android.api = 33/' buildozer.spec
+          sed -i 's/^android.sdk =.*/android.sdk = 33/' buildozer.spec
+          sed -i 's/^log_level =.*/log_level = 2/' buildozer.spec
+          
+          # 4. Pastikan arsitektur cuma arm64-v8a buat HP modern
+          sed -i 's/^android.archs =.*/android.archs = arm64-v8a/' buildozer.spec
 
       - name: Install Buildozer & Cython
         run: |
@@ -34,6 +40,7 @@ jobs:
 
       - name: Build APK with Buildozer
         run: |
+          # Pakai 'yes' buat otomatis setuju lisensi SDK
           yes | buildozer -v android debug
         env:
           ACCEPT_SDK_LICENSE: "y"
@@ -41,6 +48,6 @@ jobs:
       - name: Upload APK Result
         uses: actions/upload-artifact@v4
         with:
-          name: MaelSpeed-V3-Final
+          name: MaelSpeed-V3-Final-APK
           path: bin/*.apk
           
