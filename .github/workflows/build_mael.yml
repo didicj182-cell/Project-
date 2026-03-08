@@ -1,1 +1,46 @@
+name: Build MaelSpeed V3 APK
+on: [push, workflow_dispatch]
 
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install System Dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential git ffmpeg libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libportmidi-dev libswscale-dev libavformat-dev libavcodec-dev zlib1g-dev
+
+      - name: Auto-Fix Buildozer Spec
+        run: |
+          # Menghapus baris requirements yang ganda dan menggantinya dengan yang sakti
+          sed -i '/^requirements =/d' buildozer.spec
+          sed -i '/\[app\]/a requirements = python3,kivy==2.2.1,cython==0.29.33,yt-dlp,requests,sqlite3' buildozer.spec
+          # Memastikan log_level diset ke 2 biar kalau error kelihatan
+          sed -i 's/^log_level =.*/log_level = 2/' buildozer.spec
+          # Set API ke 33 yang lebih stabil untuk NDK 25b
+          sed -i 's/^android.api =.*/android.api = 33/' buildozer.spec
+
+      - name: Install Buildozer & Cython
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install buildozer cython==0.29.33 setuptools
+
+      - name: Build APK with Buildozer
+        run: |
+          yes | buildozer -v android debug
+        env:
+          ACCEPT_SDK_LICENSE: "y"
+
+      - name: Upload APK Result
+        uses: actions/upload-artifact@v4
+        with:
+          name: MaelSpeed-V3-Final
+          path: bin/*.apk
+          
