@@ -1,4 +1,4 @@
-name: Build MaelSpeed V3 APK (Bore-Up Version)
+name: Build MaelSpeed V3 APK (Bore-Up Full Spek)
 on: [push, workflow_dispatch]
 
 jobs:
@@ -15,27 +15,29 @@ jobs:
       - name: Install System Dependencies
         run: |
           sudo apt update
-          # Menambahkan alat compile lengkap agar tidak error autoreconf
+          # Tambahan libltdl-dev untuk fix error macro autoconf
+          # Tambahan libffi-dev & libssl-dev untuk fitur download/internet
           sudo apt install -y build-essential git ffmpeg libsdl2-dev libsdl2-image-dev \
           libsdl2-mixer-dev libsdl2-ttf-dev libportmidi-dev libswscale-dev \
-          libavformat-dev libavcodec-dev zlib1g-dev libtool autoconf automake pkg-config
+          libavformat-dev libavcodec-dev zlib1g-dev libtool autoconf automake \
+          pkg-config libltdl-dev libffi-dev libssl-dev
 
       - name: Extreme Auto-Fix Buildozer Spec
         run: |
-          # 1. Hapus SEMUA baris requirements yang ada (biar gak duplikat)
+          # 1. Hapus SEMUA baris requirements (biar gak ada duplikat di baris 429)
           sed -i '/requirements =/d' buildozer.spec
           
-          # 2. Potong section [buildozer] sampai akhir file (buang sampah baris 429)
+          # 2. Potong paksa section [buildozer] sampai akhir file
           sed -i '/\[buildozer\]/,$d' buildozer.spec
           
-          # 3. Pasang requirements sakti tepat di bawah [app]
+          # 3. Pasang ulang requirements yang bener di bawah [app]
           sed -i '/\[app\]/a requirements = python3,kivy==2.2.1,cython==0.29.33,yt-dlp,requests,sqlite3' buildozer.spec
           
-          # 4. Setel API 33 agar stabil dengan NDK 25b
+          # 4. Setel API 33 agar stabil
           sed -i 's/^android.api =.*/android.api = 33/' buildozer.spec
           sed -i 's/^log_level =.*/log_level = 2/' buildozer.spec
           
-          # 5. Tulis ulang section [buildozer] yang bersih di paling bawah
+          # 5. Tulis ulang section [buildozer] yang bersih
           echo -e "\n[buildozer]\nlog_level = 2\nwarn_on_root = 1" >> buildozer.spec
 
       - name: Install Buildozer & Cython
@@ -45,7 +47,7 @@ jobs:
 
       - name: Build APK with Buildozer
         run: |
-          # Otomatis setuju lisensi Android SDK
+          # 'yes' untuk otomatis setuju lisensi Android SDK
           yes | buildozer -v android debug
         env:
           ACCEPT_SDK_LICENSE: "y"
