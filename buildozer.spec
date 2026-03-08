@@ -7,7 +7,7 @@ title = MAEL-SPEED V3
 package.name = maelspeedv3
 
 # (str) Package domain (needed for android/ios packaging)
-package.domain = org.test
+package.domain = org.mael
 
 # (str) Source code where the main.py live
 source.dir = .
@@ -39,7 +39,7 @@ version = 0.1
 
 # (list) Application requirements
 # comma separated e.g. 
-requirements = python3,kivy==2.2.1,cython==0.29.33,yt-dlp,requests,sqlite3
+requirements = python3,kivy==2.2.1,cython==0.29.33,yt-dlp,requests,sqlite3,certifi,urllib3
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
