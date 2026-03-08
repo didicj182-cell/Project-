@@ -1,4 +1,4 @@
-name: Build MaelSpeed V3 APK (Final Fix)
+name: Build MaelSpeed V3 APK (Bore-Up Version)
 on: [push, workflow_dispatch]
 
 jobs:
@@ -15,25 +15,27 @@ jobs:
       - name: Install System Dependencies
         run: |
           sudo apt update
-          sudo apt install -y build-essential git ffmpeg libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libportmidi-dev libswscale-dev libavformat-dev libavcodec-dev zlib1g-dev
+          # Menambahkan alat compile lengkap agar tidak error autoreconf
+          sudo apt install -y build-essential git ffmpeg libsdl2-dev libsdl2-image-dev \
+          libsdl2-mixer-dev libsdl2-ttf-dev libportmidi-dev libswscale-dev \
+          libavformat-dev libavcodec-dev zlib1g-dev libtool autoconf automake pkg-config
 
       - name: Extreme Auto-Fix Buildozer Spec
         run: |
-          # 1. [span_3](start_span)[span_4](start_span)Hapus SEMUA baris requirements di seluruh file (biar gak ada duplikat)[span_3](end_span)[span_4](end_span)
+          # 1. Hapus SEMUA baris requirements yang ada (biar gak duplikat)
           sed -i '/requirements =/d' buildozer.spec
           
-          # 2. [span_5](start_span)Cari di mana section [buildozer] berada dan hapus sampai akhir file[span_5](end_span)
-          # [span_6](start_span)Ini buat ngebuang baris 429 yang bikin error DuplicateOption[span_6](end_span)
+          # 2. Potong section [buildozer] sampai akhir file (buang sampah baris 429)
           sed -i '/\[buildozer\]/,$d' buildozer.spec
           
-          # 3. [span_7](start_span)Pasang requirements yang bener di bawah [app][span_7](end_span)
+          # 3. Pasang requirements sakti tepat di bawah [app]
           sed -i '/\[app\]/a requirements = python3,kivy==2.2.1,cython==0.29.33,yt-dlp,requests,sqlite3' buildozer.spec
           
-          # 4. [span_8](start_span)Setel ulang API dan Log Level agar stabil[span_8](end_span)
+          # 4. Setel API 33 agar stabil dengan NDK 25b
           sed -i 's/^android.api =.*/android.api = 33/' buildozer.spec
           sed -i 's/^log_level =.*/log_level = 2/' buildozer.spec
           
-          # 5. [span_9](start_span)Tulis ulang section [buildozer] yang bersih di paling bawah[span_9](end_span)
+          # 5. Tulis ulang section [buildozer] yang bersih di paling bawah
           echo -e "\n[buildozer]\nlog_level = 2\nwarn_on_root = 1" >> buildozer.spec
 
       - name: Install Buildozer & Cython
@@ -43,7 +45,7 @@ jobs:
 
       - name: Build APK with Buildozer
         run: |
-          # [span_10](start_span)Pakai 'yes' untuk otomatis menyetujui lisensi SDK[span_10](end_span)
+          # Otomatis setuju lisensi Android SDK
           yes | buildozer -v android debug
         env:
           ACCEPT_SDK_LICENSE: "y"
